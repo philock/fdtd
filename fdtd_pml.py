@@ -52,7 +52,7 @@ class fdtd_pml():
     
     def update_H(self):
         st = self.grid.width - self.width - 1
-        sty = st + 1
+        sty = st - 1
 
         self.psi_hx[:,st:] *= self.bh
         self.psi_hy[:,sty:] *= self.bh
