@@ -8,7 +8,7 @@ class fdtd_pml():
         self.grid   = grid
 
         #quadratic increasing profile of conductivity, from 0 up to sigma_max. shape = (1, width)
-        sigma_curve = sigma_max*np.linspace(0.0, 1.0, width)**2
+        sigma_curve = sigma_max*np.linspace(0.5, 1.0, width)**2
 
         #constants vectors. shape = (1, width)
         self.be     = np.exp(-(a/grid.e0 + sigma_curve/grid.e0)*grid.dt)
@@ -19,8 +19,8 @@ class fdtd_pml():
         match pos:
             case 'right':
                 self.psi_ez = np.zeros((grid.height, grid.width, 2))
-                self.psi_hx = np.zeros((grid.height-1, grid.width))
-                self.psi_hy = np.zeros((grid.height, grid.width - 1))
+                self.psi_hx = np.zeros((grid.height, grid.width))
+                self.psi_hy = np.zeros((grid.height, grid.width))
 
                 #self.region_ez = (slice(1, -1), slice(grid.width - width - 1, -1))
                 #self.region_hx = (slice(1, -1), slice(grid.width - width - 1, -1))
@@ -39,38 +39,34 @@ class fdtd_pml():
                 raise ValueError("Unknown position of PML! Use 'right', 'left', 'top' or 'bottom'.")
     
     def update_E(self):
-        st = self.grid.width - self.width - 1
+        st = -self.width
 
-        self.psi_ez[:, st:-1, 0] *= self.be
-        self.psi_ez[:, st:-1, 1] *= self.be
+        self.psi_ez[:, st:, 0] *= self.be
+        self.psi_ez[:, st:, 1] *= self.be
 
         Hy = self.grid.Hy
         Hx = self.grid.Hx
 
-        self.psi_ez[1:-1,st:-1] += (Hy[1:-1,st:] - Hy[1:-1,st-1:-1]) * self.ce
-        self.psi_ez[1:-1,st:-1] += (Hx[1:,st:-1] - Hx[:-1,st:-1]) * self.ce
+        self.psi_ez[:,  st+1:, 0] += (Hy[:,st+1:] - Hy[:,st:-1]) * self.ce[1:]
+        self.psi_ez[1:, st:, 1] += (Hx[1:,st:] - Hx[:-1,st:]) * self.ce
     
     def update_H(self):
-        st = self.grid.width - self.width - 1
-        sty = st - 1
+        st = -self.width
 
         self.psi_hx[:,st:] *= self.bh
-        self.psi_hy[:,sty:] *= self.bh
+        self.psi_hy[:,st:] *= self.bh
 
         Ez = self.grid.Ez
 
-        self.psi_hx[:, st:] += (Ez[1:,st:]-Ez[:-1,st:])*self.ce
-        self.psi_hy[:, sty:] += (Ez[:,st+1:]-Ez[:,st:-1])*self.ce
+        self.psi_hx[:-1, st:] += (Ez[1:,st:]-Ez[:-1,st:])*self.ce
+        self.psi_hy[:,   st:-1] += (Ez[:,st+1:]-Ez[:,st:-1])*self.ce[:-1]
 
     def apply_E(self):
-        st = self.grid.width - self.width - 1
-        self.grid.Ez[1:-1,st:-1] += (self.psi_ez[:,:,0] - self.psi_ez[:,:,1]) * (1/self.grid.e0) * self.grid.Cdtds
-        #self.grid.Ez[self.region_ez] += (self.psi_ez[:,:,0] - self.psi_ez[:,:,1]) * self.grid.Cdtds
+        #self.grid.Ez += (self.psi_ez[:,:,0] - self.psi_ez[:,:,1]) * (1/self.grid.e0) * self.grid.Cdtds
+        self.grid.Ez += (self.psi_ez[:,:,0] - self.psi_ez[:,:,1]) * self.grid.Cdtds
 
     def apply_H(self):
-        st = self.grid.width - self.width - 1
-        sty = st - 1
-        self.grid.Hx[:, st:] -= self.psi_hx[:,:] * (1/self.grid.u0) * self.grid.Cdtds
-        self.grid.Hy[:, sty:] += self.psi_hy[:,:] * (1/self.grid.u0) * self.grid.Cdtds
-        #self.grid.Hx[self.region_hx] -= self.psi_hx[:,:] *  self.grid.Cdtds
-        #self.grid.Hy[self.region_hy] += self.psi_hy[:,:] *  self.grid.Cdtds
+        #self.grid.Hx -= self.psi_hx[:,:] * (1/self.grid.u0) * self.grid.Cdtds
+        #self.grid.Hy += self.psi_hy[:,:] * (1/self.grid.u0) * self.grid.Cdtds
+        self.grid.Hx -= self.psi_hx[:,:] * self.grid.Cdtds
+        self.grid.Hy += self.psi_hy[:,:] * self.grid.Cdtds
