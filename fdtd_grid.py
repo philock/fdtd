@@ -18,19 +18,19 @@ class fdtd_grid:
         self.height = height    # number of grid points in y direction
         self.delta  = delta     # distance between two points (grid spacing)
 
-        self.Hx     = np.zeros((height-1,    width))   # Magnetic field x component
-        self.Hy     = np.zeros((height,      width-1)) # Magnetic field y component
+        self.Hx     = np.zeros((height,      width))   # Magnetic field x component
+        self.Hy     = np.zeros((height,      width))   # Magnetic field y component
         self.Ez     = np.zeros((height,      width))   # Electric field z component
         self.er     = np.ones ((height,      width))   # relative permittivity in grid
         self.ur     = np.ones ((height,      width))   # relative permeability in grid
         self.sigma  = np.zeros((height,      width))   # conductivity in grid
         self.sigmam = np.zeros((height,      width))   # magnetic conductivity in grid
 
-        self.Chxh   = np.zeros((height-1,    width))   # Coefficient for updating Hx from H-field
-        self.Chxe   = np.zeros((height-1,    width))   # Coefficient for updating Hx from E-field
+        self.Chxh   = np.zeros((height,      width))   # Coefficient for updating Hx from H-field
+        self.Chxe   = np.zeros((height,      width))   # Coefficient for updating Hx from E-field
 
-        self.Chyh   = np.zeros((height,      width-1)) # Coefficient for updating Hy from H-field
-        self.Chye   = np.zeros((height,      width-1)) # Coefficient for updating Hy from E-field
+        self.Chyh   = np.zeros((height,      width))   # Coefficient for updating Hy from H-field
+        self.Chye   = np.zeros((height,      width))   # Coefficient for updating Hy from E-field
 
         self.Cezh   = np.zeros((height,      width))   # Coefficient for updating Ez from H-field
         self.Ceze   = np.zeros((height,      width))   # Coefficient for updating Ez from E-field
@@ -94,16 +94,16 @@ class fdtd_grid:
         e = self.e0*self.er # permittivity
         u = self.u0*self.ur # permeability
 
-        self.Chxh = (1 - ((self.sigmam[:-1,:] * self.dt) / (2 * u[:-1,:]))  ) / (  1 + ((self.sigmam[:-1,:] * self.dt) / (2 * u[:-1,:]))  )
+        self.Chxh = (1 - ((self.sigmam * self.dt) / (2 * u))  ) / (  1 + ((self.sigmam * self.dt) / (2 * u))  )
         #self.Chxh[:,:] = 1 
 
-        self.Chxe = self.dt / ((u[:-1,:] * self.delta) * (  1 + ((self.sigmam[:-1,:] * self.dt) / (2 * u[:-1,:]))  ))
+        self.Chxe = self.dt / ((u * self.delta) * (  1 + ((self.sigmam * self.dt) / (2 * u))  ))
         #self.Chxe[:,:] = self.Cdtds/self.Z0
 
-        self.Chyh = (1 - ((self.sigmam[:,:-1] * self.dt) / (2 * u[:,:-1]))  ) / (  1 + ((self.sigmam[:,:-1] * self.dt) / (2 * u[:,:-1]))  )
+        self.Chyh = (1 - ((self.sigmam * self.dt) / (2 * u))  ) / (  1 + ((self.sigmam * self.dt) / (2 * u))  )
         #self.Chyh[:,:] = 1
 
-        self.Chye = self.dt / ((u[:,:-1] * self.delta) * (  1 + ((self.sigmam[:,:-1] * self.dt) / (2 * u[:,:-1]))  ))
+        self.Chye = self.dt / ((u * self.delta) * (  1 + ((self.sigmam * self.dt) / (2 * u))  ))
         #self.Chye[:,:] = self.Cdtds/self.Z0
 
         self.Ceze = (1 - ((self.sigma * self.dt) / (2 * e))  ) / (  1 + ((self.sigma * self.dt) / (2 * e)) )

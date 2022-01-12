@@ -32,8 +32,8 @@ class fdtd_simulation():
                 a.update_H()
 
             # update H field
-            self.grid.Hx[:,:] = self.grid.Chxh[:,:] * self.grid.Hx[:,:] - self.grid.Chxe[:,:] * (self.grid.Ez[1:,:] - self.grid.Ez[:-1,:])
-            self.grid.Hy[:,:] = self.grid.Chyh[:,:] * self.grid.Hy[:,:] + self.grid.Chye[:,:] * (self.grid.Ez[:,1:] - self.grid.Ez[:,:-1])
+            self.grid.Hx[:-1,:] = self.grid.Chxh[:-1,:] * self.grid.Hx[:-1,:] - self.grid.Chxe[:-1,:] * (self.grid.Ez[1:,:] - self.grid.Ez[:-1,:])
+            self.grid.Hy[:,:-1] = self.grid.Chyh[:,:-1] * self.grid.Hy[:,:-1] + self.grid.Chye[:,:-1] * (self.grid.Ez[:,1:] - self.grid.Ez[:,:-1])
 
             #apply PML to H-field
             for a in self.absorbers:
@@ -44,7 +44,7 @@ class fdtd_simulation():
                 a.update_E()
 
             # update E field
-            self.grid.Ez[1:-1,1:-1] = self.grid.Ceze[1:-1,1:-1] * self.grid.Ez[1:-1,1:-1] + self.grid.Cezh[1:-1,1:-1] * ((self.grid.Hy[1:-1,1:] - self.grid.Hy[1:-1,:-1]) - (self.grid.Hx[1:,1:-1] - self.grid.Hx[:-1,1:-1]))
+            self.grid.Ez[1:-1,1:-1] = self.grid.Ceze[1:-1,1:-1] * self.grid.Ez[1:-1,1:-1] + self.grid.Cezh[1:-1,1:-1] * ((self.grid.Hy[1:-1,1:-1] - self.grid.Hy[1:-1,:-2]) - (self.grid.Hx[1:-1,1:-1] - self.grid.Hx[:-2,1:-1]))
 
             #apply PML to E-field
             for a in self.absorbers:
