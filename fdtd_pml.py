@@ -3,18 +3,32 @@ import  math
 from    fdtd_grid import *
 
 class fdtd_pml():
-    def __init__(self, grid : fdtd_grid, pos, width = 10, sigma_max = 40, a = 1.0e-8):
+    def __init__(self, grid : fdtd_grid, pos, width = 30, sigma_max = 40, a = 1.0e-8):
         self.width  = width
         self.grid   = grid
 
         #quadratic increasing profile of conductivity, from 0 up to sigma_max. shape = (1, width)
-        sigma_curve = sigma_max*np.linspace(0.5, 1.0, width)**2
+        sigma_curve = sigma_max*np.linspace(0, 1.0, width)**2
 
         #constants vectors. shape = (1, width)
-        self.be     = np.exp(-(a/grid.e0 + sigma_curve/grid.e0)*grid.dt)
-        self.bh     = np.exp(-(a/grid.u0 + sigma_curve/grid.u0)*grid.dt)
-        self.ce     = (self.be - 1)*sigma_curve/(sigma_curve + a)
-        self.ch     = (self.be - 1)*sigma_curve/(sigma_curve + a)
+        #self.be     = np.exp(-(a/grid.e0 + sigma_curve/grid.e0)*grid.dt)
+        #self.bh     = np.exp(-(a/grid.u0 + sigma_curve/grid.u0)*grid.dt)
+        #self.ce     = (self.be - 1)*sigma_curve/(sigma_curve + a)
+        #self.ch     = (self.be - 1)*sigma_curve/(sigma_curve + a)
+
+        self.be = np.exp(-(a + sigma_curve) * grid.dt)
+        self.ce = (
+            (self.be - 1.0)
+            * sigma_curve  # is defined by _set_sigmaE()
+            / (sigma_curve + a)
+        )
+
+        self.bh = np.exp(-(a + sigma_curve) * grid.dt)
+        self.ch = (
+            (self.bh - 1.0)
+            * sigma_curve  # is defined by _set_sigmaH()
+            / (sigma_curve + a)
+        )
 
         match pos:
             case 'right':
@@ -48,7 +62,7 @@ class fdtd_pml():
         Hx = self.grid.Hx
 
         self.psi_ez[:,  st+1:, 0] += (Hy[:,st+1:] - Hy[:,st:-1]) * self.ce[1:]
-        self.psi_ez[1:, st:, 1] += (Hx[1:,st:] - Hx[:-1,st:]) * self.ce
+        self.psi_ez[1:, st:, 1] += (Hx[1:,st:] - Hx[:-1,st:]) * 0#self.ce
     
     def update_H(self):
         st = -self.width
@@ -58,15 +72,15 @@ class fdtd_pml():
 
         Ez = self.grid.Ez
 
-        self.psi_hx[:-1, st:] += (Ez[1:,st:]-Ez[:-1,st:])*self.ce
+        self.psi_hx[:-1, st:] += (Ez[1:,st:]-Ez[:-1,st:])*0#self.ce
         self.psi_hy[:,   st:-1] += (Ez[:,st+1:]-Ez[:,st:-1])*self.ce[:-1]
 
     def apply_E(self):
         #self.grid.Ez += (self.psi_ez[:,:,0] - self.psi_ez[:,:,1]) * (1/self.grid.e0) * self.grid.Cdtds
-        self.grid.Ez += (self.psi_ez[:,:,0] - self.psi_ez[:,:,1]) * self.grid.Cdtds
+        self.grid.Ez += (self.psi_ez[:,:,0] - self.psi_ez[:,:,1]) * (1/np.sqrt(self.grid.e0))
 
     def apply_H(self):
-        #self.grid.Hx -= self.psi_hx[:,:] * (1/self.grid.u0) * self.grid.Cdtds
-        #self.grid.Hy += self.psi_hy[:,:] * (1/self.grid.u0) * self.grid.Cdtds
-        self.grid.Hx -= self.psi_hx[:,:] * self.grid.Cdtds
-        self.grid.Hy += self.psi_hy[:,:] * self.grid.Cdtds
+        #self.grid.Hx += self.psi_hx[:,:] * (1/self.grid.u0) * self.grid.Cdtds
+        #self.grid.Hy -= self.psi_hy[:,:] * (1/self.grid.u0) * self.grid.Cdtds
+        self.grid.Hx += self.psi_hx[:,:] * (1/np.sqrt(self.grid.u0))
+        self.grid.Hy -= self.psi_hy[:,:] * (1/np.sqrt(self.grid.u0))

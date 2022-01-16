@@ -12,7 +12,7 @@ source = fdtd_source(source_shape, grid)
 
 pml = fdtd_pml(grid, 'right')
 
-sim = fdtd_simulation(grid, 200, 200)
+sim = fdtd_simulation(grid, 800, 200)
 sim.add_source(source)
 sim.add_absorber(pml)
 sim.run()
