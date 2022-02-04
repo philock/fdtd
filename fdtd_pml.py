@@ -1,44 +1,36 @@
 import  numpy as np
 import  math
 from    fdtd_grid import *
+import matplotlib.pyplot as plt
 
 class fdtd_pml():
-    def __init__(self, grid : fdtd_grid, pos, width = 30, sigma_max = 40, a = 1.0e-8):
-        self.width  = width
-        self.grid   = grid
+    def __init__(self, grid : fdtd_grid, pos, width = 45, sigma_max = 3, a = 1.0e-8):
+        self.width    = width
+        self.grid     = grid
+        self.position = pos
 
-        #quadratic increasing profile of conductivity, from 0 up to sigma_max. shape = (1, width)
-        sigma_curve = sigma_max*np.linspace(0, 1.0, width)**2
+        #qubic increasing profile of conductivity, from 0 up to sigma_max. shape = (1, width)
+        sigma_curve = sigma_max * np.linspace(0.0, 1.0, width)**3
+
+        plt.plot(sigma_curve)
+        plt.show(block = True)
 
         #constants vectors. shape = (1, width)
-        #self.be     = np.exp(-(a/grid.e0 + sigma_curve/grid.e0)*grid.dt)
-        #self.bh     = np.exp(-(a/grid.u0 + sigma_curve/grid.u0)*grid.dt)
-        #self.ce     = (self.be - 1)*sigma_curve/(sigma_curve + a)
-        #self.ch     = (self.be - 1)*sigma_curve/(sigma_curve + a)
+        self.be = np.exp(-(a + sigma_curve) * grid.Cdtds)
+        self.ce = ((self.be - 1.0)* sigma_curve / (sigma_curve + a))
 
-        self.be = np.exp(-(a + sigma_curve) * grid.dt)
-        self.ce = (
-            (self.be - 1.0)
-            * sigma_curve  # is defined by _set_sigmaE()
-            / (sigma_curve + a)
-        )
+        self.bh = np.exp(-(a + sigma_curve) * grid.Cdtds)
+        self.ch = ((self.bh - 1.0)* sigma_curve/ (sigma_curve + a))
 
-        self.bh = np.exp(-(a + sigma_curve) * grid.dt)
-        self.ch = (
-            (self.bh - 1.0)
-            * sigma_curve  # is defined by _set_sigmaH()
-            / (sigma_curve + a)
-        )
+        self.psi_ez = np.zeros((grid.height, grid.width, 2))
+        self.psi_hx = np.zeros((grid.height, grid.width))
+        self.psi_hy = np.zeros((grid.height, grid.width))
 
         match pos:
             case 'right':
-                self.psi_ez = np.zeros((grid.height, grid.width, 2))
-                self.psi_hx = np.zeros((grid.height, grid.width))
-                self.psi_hy = np.zeros((grid.height, grid.width))
-
-                #self.region_ez = (slice(1, -1), slice(grid.width - width - 1, -1))
-                #self.region_hx = (slice(1, -1), slice(grid.width - width - 1, -1))
-                #self.region_hy = (slice(1, -1), slice(grid.width - width - 1, -1))
+                self.region = (slice(None), slice(-grid.width, None))
+                self.region_hx = (slice(1, -1), slice(grid.width - width - 1, -1))
+                self.region_hy = (slice(1, -1), slice(grid.width - width - 1, -1))
             case 'left':
                 self.be = np.flip(self.be)
                 self.bh = np.flip(self.bh)
@@ -76,11 +68,8 @@ class fdtd_pml():
         self.psi_hy[:,   st:-1] += (Ez[:,st+1:]-Ez[:,st:-1])*self.ce[:-1]
 
     def apply_E(self):
-        #self.grid.Ez += (self.psi_ez[:,:,0] - self.psi_ez[:,:,1]) * (1/self.grid.e0) * self.grid.Cdtds
-        self.grid.Ez += (self.psi_ez[:,:,0] - self.psi_ez[:,:,1]) * (1/np.sqrt(self.grid.e0))
+        self.grid.Ez += (self.psi_ez[:,:,0] - self.psi_ez[:,:,1]) * self.grid.Cdtds
 
     def apply_H(self):
-        #self.grid.Hx += self.psi_hx[:,:] * (1/self.grid.u0) * self.grid.Cdtds
-        #self.grid.Hy -= self.psi_hy[:,:] * (1/self.grid.u0) * self.grid.Cdtds
-        self.grid.Hx += self.psi_hx[:,:] * (1/np.sqrt(self.grid.u0))
-        self.grid.Hy -= self.psi_hy[:,:] * (1/np.sqrt(self.grid.u0))
+        self.grid.Hx += self.psi_hx[:,:] * self.grid.Cdtds
+        self.grid.Hy -= self.psi_hy[:,:] * self.grid.Cdtds

@@ -44,7 +44,8 @@ class fdtd_simulation():
                 a.update_E()
 
             # update E field
-            self.grid.Ez[1:-1,1:-1] = self.grid.Ceze[1:-1,1:-1] * self.grid.Ez[1:-1,1:-1] + self.grid.Cezh[1:-1,1:-1] * ((self.grid.Hy[1:-1,1:-1] - self.grid.Hy[1:-1,:-2]) - (self.grid.Hx[1:-1,1:-1] - self.grid.Hx[:-2,1:-1]))
+            #self.grid.Ez[1:-1,1:-1] = self.grid.Ceze[1:-1,1:-1] * self.grid.Ez[1:-1,1:-1] + self.grid.Cezh[1:-1,1:-1] * ((self.grid.Hy[1:-1,1:-1] - self.grid.Hy[1:-1,:-2]) - (self.grid.Hx[1:-1,1:-1] - self.grid.Hx[:-2,1:-1]))
+            self.grid.Ez[1:,1:] = self.grid.Ceze[1:,1:] * self.grid.Ez[1:,1:] + self.grid.Cezh[1:,1:] * ((self.grid.Hy[1:,1:] - self.grid.Hy[1:,:-1]) - (self.grid.Hx[1:,1:] - self.grid.Hx[:-1,1:]))
 
             #apply PML to E-field
             for a in self.absorbers:
@@ -85,7 +86,7 @@ class fdtd_simulation():
 
         plt.show()
 
-    def show_animation(self, savelocation = None, colormap = None, power = False, scale = 'log', decades = 4, frameinterval = 30):
+    def show_animation(self, savelocation = None, colormap = None, power = False, scale = 'lin', decades = 4, denormalize = True, frameinterval = 30):
         '''Shows animation of Electric field together with simulation objects. Visualization options:
             Power of field or raw electric field (default)
             'log': Logarithmic plot (default):
@@ -95,9 +96,12 @@ class fdtd_simulation():
                 Field gets plotted with log10-scale in both positive and negative direction
                 Specify number of decades to plot logarithmic, after that the plot will continue linear 
             'lin': Linear plot:
-                Field gets plotted with linear scale'''        
+                Field gets plotted with linear scale
+            denormalize field with sqrt(e0) (default). This leads to much smaller values. Alternatively the normalized field can be plotted'''        
 
-            
+        if denormalize: 
+            self.snapshots = math.sqrt(self.grid.e0)*self.snapshots
+
         if power:
             self.snapshots = np.power(self.snapshots, 2)
         
@@ -105,26 +109,31 @@ class fdtd_simulation():
             max = np.max(self.snapshots)
             norm = clr.LogNorm(vmax = max, vmin = pow(10, (-1*decades) ), clip = True )
         elif scale == 'symlog':
-            max = np.max(self.snapshots)
-            norm = clr.SymLogNorm(linthresh = pow(10, (-1*decades) ), vmax = max, vmin = -max )
+            #max = np.max(self.snapshots)
+            #norm = clr.SymLogNorm(linthresh = pow(10, (-1*decades) ), vmax = max, vmin = -max, base = 10)
 
-            #shape = np.shape(self.snapshots)
-            #normalized = norm.__call__(self.snapshots.flatten())
-            #self.snapshots = np.reshape(normalized, shape)
-            
-        elif scale == 'lin':
             norm = clr.NoNorm()
+            max = np.max(self.snapshots)
+            min = np.min(self.snapshots)
+            pos = self.snapshots >= pow(10, -decades)
+            neg = self.snapshots <= -pow(10, -decades)
+            self.snapshots[np.abs(self.snapshots) < pow(10, -decades)] = 0.5 + self.snapshots[np.abs(self.snapshots) < pow(10, -decades)]
+            self.snapshots[pos] = np.interp(np.log10(self.snapshots[pos]), (-decades, np.log10(max)), (0.5, 1.0))
+            self.snapshots[neg] = np.interp(np.log10(np.abs(self.snapshots[neg])), (-decades, np.log10(np.abs(min))), (0.5, 0.0))         
+        elif scale == 'lin':
+            if power:
+                norm = clr.Normalize(vmin = np.min(self.snapshots), vmax = np.max(self.snapshots) )
+            else:
+                norm = clr.TwoSlopeNorm(vcenter = 0.0, vmin = np.min(self.snapshots), vmax = np.max(self.snapshots) )
         else:
             raise ValueError('unknown scale! Use log, symlog or lin')
      
-        dummynorm = clr.NoNorm()
         fig     = plt.figure()
         im      = plt.imshow(self.snapshots[:,:,0], norm = norm, cmap=colormap)
         self.overlay_objects()
 
         def update(i):
             im.set_data(self.snapshots[:,:,i])
-            #im.set_clim(-4, 0)
             return [im]
 
         anim = animation.FuncAnimation(fig, update, frames = self.Nsnaps, interval = frameinterval)
@@ -155,6 +164,20 @@ class fdtd_simulation():
             img[mask, 2] = o.rgbv[2] # blue
             img[mask, 3] = o.rgbv[3] # transparency
             plt.imshow(img)
+
+        for a in self.absorbers:
+            #mask = np.zeros_like(self.grid.Ez, dtype = bool)
+            match a.position:
+                case 'right':
+                    plt.axvline(self.grid.width - a.width)
+                case 'left':
+                    plt.axvline(a.width)
+                case 'top':
+                    plt.axvline(a.width)
+                case 'bottom':
+                    plt.axvline(self.grid.height - a.width)
+                case _:
+                    pass
 
     def log_color(self, data, normalize):
         return np.log10((np.power( np.abs(data)+ 1e-9, 2)) / normalize)

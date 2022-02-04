@@ -27,7 +27,7 @@ class fdtd_source():
                 grid      : fdtd_grid = None,       # grid on which the source should be applied. This is only to generate the shape mask of correct size and obtain time step size
                 type      = 'soft',                 # soft source is additive to grid value, hard source overwrites grid value
                 waveform  = 'ricker',               # type of waveform of source. Can be ricker, sine, step or arb
-                ricker_Md = 1,   ricker_Np = 20,    # parameters for ricker source
+                ricker_Md = 1,   ricker_Np = 20,    # parameters for ricker source. Np: number of points per wavelength, Md: delay multiple
                 step_start= None, step_stop = None, # parameters for step function: time step of turn on and time step of turn off
                 sine_freq = None,                   # parameter for sine function: frequency
                 arb_func  = None):                  # parameter for arb source: function of signature f(i)

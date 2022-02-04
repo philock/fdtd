@@ -95,21 +95,15 @@ class fdtd_grid:
         u = self.u0*self.ur # permeability
 
         self.Chxh = (1 - ((self.sigmam * self.dt) / (2 * u))  ) / (  1 + ((self.sigmam * self.dt) / (2 * u))  )
-        #self.Chxh[:,:] = 1 
 
-        self.Chxe = self.dt / ((u * self.delta) * (  1 + ((self.sigmam * self.dt) / (2 * u))  ))
-        #self.Chxe[:,:] = self.Cdtds/self.Z0
+        self.Chxe = ((self.Cdtds/self.ur) / (  1 + ((self.sigmam * self.dt) / (2 * u))  ))
 
         self.Chyh = (1 - ((self.sigmam * self.dt) / (2 * u))  ) / (  1 + ((self.sigmam * self.dt) / (2 * u))  )
-        #self.Chyh[:,:] = 1
 
-        self.Chye = self.dt / ((u * self.delta) * (  1 + ((self.sigmam * self.dt) / (2 * u))  ))
-        #self.Chye[:,:] = self.Cdtds/self.Z0
+        self.Chye = (self.Cdtds/self.ur) / (  1 + ((self.sigmam * self.dt) / (2 * u))  )
 
         self.Ceze = (1 - ((self.sigma * self.dt) / (2 * e))  ) / (  1 + ((self.sigma * self.dt) / (2 * e)) )
-        #self.Ceze[:,:] = 1
 
-        self.Cezh = self.dt / ((e * self.delta) * (  1 + ((self.sigma * self.dt) / (2 * e))  ))
-        #self.Cezh[:,:] = self.Cdtds*self.Z0
-
+        self.Cezh = ((self.Cdtds/self.er) / (  1 + ((self.sigma * self.dt) / (2 * e))  ))
+        
         return
