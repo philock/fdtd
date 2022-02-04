@@ -109,17 +109,17 @@ class fdtd_simulation():
             max = np.max(self.snapshots)
             norm = clr.LogNorm(vmax = max, vmin = pow(10, (-1*decades) ), clip = True )
         elif scale == 'symlog':
-            #max = np.max(self.snapshots)
-            #norm = clr.SymLogNorm(linthresh = pow(10, (-1*decades) ), vmax = max, vmin = -max, base = 10)
+            max = np.max(self.snapshots)
+            norm = clr.SymLogNorm(linthresh = pow(10, (-1*decades) ), vmax = max, vmin = -max, base = 10)
 
-            norm = clr.NoNorm()
+            """ norm = clr.NoNorm()
             max = np.max(self.snapshots)
             min = np.min(self.snapshots)
             pos = self.snapshots >= pow(10, -decades)
             neg = self.snapshots <= -pow(10, -decades)
             self.snapshots[np.abs(self.snapshots) < pow(10, -decades)] = 0.5 + self.snapshots[np.abs(self.snapshots) < pow(10, -decades)]
             self.snapshots[pos] = np.interp(np.log10(self.snapshots[pos]), (-decades, np.log10(max)), (0.5, 1.0))
-            self.snapshots[neg] = np.interp(np.log10(np.abs(self.snapshots[neg])), (-decades, np.log10(np.abs(min))), (0.5, 0.0))         
+            self.snapshots[neg] = np.interp(np.log10(np.abs(self.snapshots[neg])), (-decades, np.log10(np.abs(min))), (0.5, 0.0))"""
         elif scale == 'lin':
             if power:
                 norm = clr.Normalize(vmin = np.min(self.snapshots), vmax = np.max(self.snapshots) )
@@ -166,16 +166,15 @@ class fdtd_simulation():
             plt.imshow(img)
 
         for a in self.absorbers:
-            #mask = np.zeros_like(self.grid.Ez, dtype = bool)
             match a.position:
                 case 'right':
                     plt.axvline(self.grid.width - a.width)
                 case 'left':
                     plt.axvline(a.width)
                 case 'top':
-                    plt.axvline(a.width)
+                    plt.axhline(a.width)
                 case 'bottom':
-                    plt.axvline(self.grid.height - a.width)
+                    plt.axhline(self.grid.height - a.width)
                 case _:
                     pass
 
