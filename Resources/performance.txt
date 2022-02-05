@@ -1,3 +1,0 @@
-Vorher:
-    Circle:                         R=1000, n=40, checks=31239, t=0.3239
-    Circle mit x2 != x1+1 check:    R=1000, n=40, checks=39,    t=0.2
