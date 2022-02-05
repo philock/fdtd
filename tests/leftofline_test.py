@@ -1,6 +1,6 @@
 import numpy as np
 from operator import itemgetter
-from line import *
+from fdtd import line
 import matplotlib.pyplot as plt
 
 def left_of_line(v, l:line):

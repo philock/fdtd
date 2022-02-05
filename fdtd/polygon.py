@@ -1,6 +1,5 @@
 import numpy as np
-import math
-from line import *
+from .line import line
 from operator import itemgetter
 
 class polygon:

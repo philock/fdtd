@@ -1,5 +1,4 @@
-from fdtd_simulation import *
-from fdtd_grid import *
+from fdtd import *
 
 w = 300
 h = 300

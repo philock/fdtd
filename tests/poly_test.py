@@ -1,7 +1,7 @@
 from math import *
 import numpy as np
-from line import *
-from polygon import *
+from fdtd import line
+from fdtd import polygon
 import matplotlib.pyplot as plt
 import time
 

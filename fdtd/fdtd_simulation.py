@@ -1,12 +1,13 @@
-from math import pi
-from fdtd_grid import *
-import matplotlib
+import math 
+import numpy as np
+
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import matplotlib.colors as clr
 
-from fdtd_source import fdtd_source
-from fdtd_pml    import fdtd_pml
+from .fdtd_grid import fdtd_grid
+from .fdtd_source import fdtd_source
+from .fdtd_pml    import fdtd_pml
 
 class fdtd_simulation():
     def __init__(self, grid: fdtd_grid, Nsteps, Nsnaps):

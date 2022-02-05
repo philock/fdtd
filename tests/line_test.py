@@ -1,4 +1,4 @@
-from line import *
+from fdtd import line
 import numpy as np
 import matplotlib.pyplot as plt
 pltrows = 3

@@ -1,9 +1,9 @@
-from numpy import integer
-from fdtd_grid  import *
-from line       import *
-from polygon    import *
-from math       import pi, sin
+from .fdtd_grid  import fdtd_grid
+from .line       import line
+from .polygon    import polygon
+from math       import pi, sin, exp
 import matplotlib.pyplot as plt
+import numpy as np
 
 class fdtd_source():
 
@@ -11,7 +11,7 @@ class fdtd_source():
     def ricker_wavelet_func(self, i):
         a = self.rw_ScNp * i - self.rw_Md
         a = pi*pi*a*a 
-        return (1 - 2*a)*math.exp(-1*a)
+        return (1 - 2*a)*exp(-1*a)
 
     def sine_func(self, i):
         return sin(self.omega*i)

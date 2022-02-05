@@ -1,7 +1,5 @@
 import  numpy as np
-import  math
-from    fdtd_grid import *
-import matplotlib.pyplot as plt
+from .fdtd_grid import fdtd_grid
 
 class fdtd_pml():
     def __init__(self, grid : fdtd_grid, pos, width = 45, sigma_max = 3, a = 1.0e-8):

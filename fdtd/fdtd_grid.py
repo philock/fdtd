@@ -1,9 +1,9 @@
 import numpy as np
 import math
 
-from polygon     import *
-from line        import *
-from fdtd_object import *
+from .polygon     import polygon
+from .line        import line
+from .fdtd_object import fdtd_object
 
 class fdtd_grid:
 
