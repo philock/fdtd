@@ -1,10 +1,3 @@
-""" import sys
-sys.path.insert(0,'C:/Users/phili/Programmierung/Python/fdtd/')
-
-print("\n")
-print(sys.path)
-print("\n") """
-
 import fdtd
 import numpy as np
 import math
