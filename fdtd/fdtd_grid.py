@@ -1,3 +1,4 @@
+from asyncio import constants
 import numpy as np
 import math
 
@@ -45,7 +46,9 @@ class fdtd_grid:
         # sigma:    electrical conductivity
         # sigmam:   magnetic conductivity
         # rgbv:     RGB-V color for rendering (4 element tuple)
-        self.objects = []                            
+        self.objects = []   
+
+        self.constants_initialized = False                         
 
     
     def add_object( self, shape, er = 1, ur = 1, sigma = 0, sigmam = 0, rgbv = (0.5, 0.5, 0.5, 0.5)):
@@ -106,4 +109,5 @@ class fdtd_grid:
 
         self.Cezh = ((self.Cdtds/self.er) / (  1 + ((self.sigma * self.dt) / (2 * e))  ))
         
+        self.constants_initialized = True
         return

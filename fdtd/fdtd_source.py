@@ -11,14 +11,14 @@ class fdtd_source():
     def ricker_wavelet_func(self, i):
         a = self.rw_ScNp * i - self.rw_Md
         a = pi*pi*a*a 
-        return (1 - 2*a)*exp(-1*a)
+        return self.amplitude*(1 - 2*a)*exp(-1*a)
 
     def sine_func(self, i):
-        return sin(self.omega*i)
+        return self.amplitude*sin(self.omega*i)
 
     def step_func(self, i):
         if i >= self.step_start and i < self.step_stop:
-            return 1.0
+            return self.amplitude
         else: 
             return 0.0
 
@@ -30,10 +30,12 @@ class fdtd_source():
                 ricker_Md = 1,   ricker_Np = 20,    # parameters for ricker source. Np: number of points per wavelength, Md: delay multiple
                 step_start= None, step_stop = None, # parameters for step function: time step of turn on and time step of turn off
                 sine_freq = None,                   # parameter for sine function: frequency
-                arb_func  = None):                  # parameter for arb source: function of signature f(i)
+                arb_func  = None,                   # parameter for arb source: function of signature f(i)            
+                amplitude = 1.0):                   # multiplicative amplitude for all source types
 
         self.type       = type
         self.shape      = shape
+        self.amplitude  = amplitude
 
         self.waveform   = waveform
 
@@ -107,6 +109,14 @@ class fdtd_source():
         x = np.zeros(n)
         for i in range(n):
             x[i] = self.ricker_wavelet_func(i)
+
+        plt.plot(x)
+        plt.show()
+
+    def plot_sine_source(self, n):
+        x = np.zeros(n)
+        for i in range(n):
+            x[i] = self.sine_func(i)
 
         plt.plot(x)
         plt.show()

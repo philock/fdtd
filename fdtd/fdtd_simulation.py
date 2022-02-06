@@ -20,13 +20,12 @@ class fdtd_simulation():
         self.absorbers  : fdtd_pml    = []
 
     def run(self):
+        if not self.grid.constants_initialized: raise ValueError("Constants of grid have not been initialized! Run grid.init_constants() after adding all objects!")
+
         dsn = math.ceil(self.Nsteps/self.Nsnaps) # distance in steps between two snapshots
 
         for s in range(self.Nsteps):
 
-            # Apply sources
-            for src in self.sources:
-                src.apply(self.grid, s)
             
             #update H-fields in PML
             for a in self.absorbers:
@@ -51,6 +50,10 @@ class fdtd_simulation():
             #apply PML to E-field
             for a in self.absorbers:
                 a.apply_E()
+                
+            # Apply sources
+            for src in self.sources:
+                src.apply(self.grid, s)
 
             # take Ez-field snapshot
             if s%dsn == 0:
